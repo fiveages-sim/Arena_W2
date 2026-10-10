@@ -1,0 +1,19 @@
+# Arena world: lunar yard + yellow dome (no robot in the USD).
+# Robot is spawned by arena launch robot:=LunarBot.
+
+world_type: "usd"
+
+usd_scene:
+  # Host: HOST_LUNARBOT_DIR → container /data/lunarbot (see arena_ws/.env)
+  path: "/data/lunarbot/LunarBot-Isaac/urdf/chassis/env/LunarSim_Smooth_Dome_Yellow_Arena.usda"
+  scale: 1.0
+  position: [0.0, 0.0, 0.0]
+  orientation: [0.0, 0.0, 0.0, 1.0]
+
+metadata:
+  scene_id: "lunar_dome"
+  scene_type: "lunar"
+  source: "LunarSim_Smooth_Dome_Yellow_Arena"
+  notes: >
+    Meters, Z-up. Dome house near (0, -12).
+    Do not use a GRScenes scenario.yaml; waypoints are lunar meters.

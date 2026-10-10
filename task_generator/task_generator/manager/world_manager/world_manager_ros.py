@@ -215,15 +215,7 @@ class WorldManagerROS(MapServerHandler, WorldManager):
             world_map = WorldMap.from_costmap(costmap)
 
             if self._origin is not None:
-                # WorldMap stores the map origin in its internal row/column
-                # convention (x <- ROS origin.y, y <- ROS origin.x).  Keep
-                # that convention when restoring the unshifted map origin;
-                # tf_grid2pos() relies on it when converting sampled grid
-                # cells back to world coordinates.
-                world_map.origin = Position(
-                    x=self._origin.y,
-                    y=self._origin.x,
-                )
+                world_map.origin = self._origin
                 self._origin = None
 
             DynamicPaths.WORLD.path = world.path
