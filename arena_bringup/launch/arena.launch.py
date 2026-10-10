@@ -32,8 +32,8 @@ def generate_launch_description():
 
     robot = LaunchArgument(
         name='robot',
-        default_value='jackal',
-        description='robot model type'
+        default_value='FiveAges_W2',
+        description='robot model type (FiveAges default: FiveAges_W2)'
     )
     inter_planner = LaunchArgument(
         name='inter_planner',
