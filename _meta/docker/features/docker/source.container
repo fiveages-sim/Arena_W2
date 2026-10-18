@@ -4,6 +4,14 @@ export ARENA_WS_DIR="/opt/arena_ws"
 export ARENA_VENV_DIR="/opt/venv"
 export ARENA_FEATURES_DIR="$ARENA_WS_DIR/src/Arena/_meta/docker/features"
 
+# Host .env is bind-mounted here. Export Isaac image pin before compose runs.
+if [ -f "$ARENA_WS_DIR/.env" ]; then
+    set -a
+    # shellcheck disable=SC1091
+    . "$ARENA_WS_DIR/.env"
+    set +a
+fi
+
 docker_env=""
 docker_env="${docker_env} ARENA_PROJECT_NAME=$ARENA_PROJECT_NAME"
 docker_env="${docker_env} ARENA_IMAGE=$ARENA_IMAGE"
@@ -12,6 +20,17 @@ docker_env="${docker_env} ARENA_ROS_DISTRO=$ARENA_ROS_DISTRO"
 docker_env="${docker_env} HOST_UID=$HOST_UID"
 docker_env="${docker_env} HOST_GID=$HOST_GID"
 docker_env="${docker_env} HOST_ARENA_WS_DIR=$HOST_ARENA_WS_DIR"
+# Picked up from /opt/arena_ws/.env when set. Keeps isaac on arena_isaac:6.1
+# instead of the untagged arena_isaac image from the base compose file.
+if [ -n "${ARENA_ISAAC_IMAGE:-}" ]; then
+    docker_env="${docker_env} ARENA_ISAAC_IMAGE=$ARENA_ISAAC_IMAGE"
+fi
+if [ -n "${ISAAC_SIM_IMAGE:-}" ]; then
+    docker_env="${docker_env} ISAAC_SIM_IMAGE=$ISAAC_SIM_IMAGE"
+fi
+if [ -n "${ISAAC_PYTHON:-}" ]; then
+    docker_env="${docker_env} ISAAC_PYTHON=$ISAAC_PYTHON"
+fi
 
 
 export docker_env
@@ -22,9 +41,17 @@ HOST_GID=$(id -g)
 export HOST_GID
 
 arena_docker_compose(){
+    # Same overlay rule as the host arena launcher. Without this file, ros2
+    # launch recreates isaac from the base compose only: image arena_isaac
+    # (5.1.0) and no /opt/w2_usda mount, so spawn fails and Reset Task has no
+    # robot to move.
+    local compose_args=(-f "$ARENA_DIR/_meta/docker/docker-compose.yaml")
+    if [ -f "$ARENA_WS_DIR/docker-compose.fiveages.yaml" ]; then
+        compose_args+=(-f "$ARENA_WS_DIR/docker-compose.fiveages.yaml")
+    fi
     sudo env ${docker_env} \
         docker compose \
-        -f "$ARENA_DIR/_meta/docker/docker-compose.yaml" \
+        "${compose_args[@]}" \
         --project-directory "$ARENA_WS_DIR" \
         --project-name "$ARENA_PROJECT_NAME" \
         "$@"

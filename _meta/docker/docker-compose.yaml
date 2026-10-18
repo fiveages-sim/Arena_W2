@@ -49,10 +49,17 @@ services:
       - 50102
 
   isaac:
-    image: "arena_isaac"
+    # arena_isaac with no tag is the 5.1 image. ros2 launch runs compose from
+    # inside the ROS container and does not see docker-compose.fiveages.yaml,
+    # so the pin and the USDA mount have to live in this file. .env sets
+    # ARENA_ISAAC_IMAGE=arena_isaac:6.1. Unset it to stay on 5.1.0.
+    image: ${ARENA_ISAAC_IMAGE:-arena_isaac:5.1.0}
     build:
       context: .
       dockerfile: src/Arena/_meta/docker/features/isaac/Dockerfile
+      args:
+        ISAAC_SIM_IMAGE: ${ISAAC_SIM_IMAGE:-nvcr.io/nvidia/isaac-sim:5.1.0}
+        ISAAC_PYTHON: ${ISAAC_PYTHON:-3.11}
     network_mode: host
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
@@ -65,6 +72,8 @@ services:
       - "$HOST_ARENA_WS_DIR/log:/opt/arena_ws/log"
       - "$HOST_ARENA_WS_DIR/.env:/opt/arena_ws/.env"
       - "${HOST_SCENES_DIR:-/tmp/arena_scenes}:/data/scenes"
+      - "${HOST_DEPS_DIR:-/home/zy/SocialNav/arena_ws/src/deps}:/opt/arena_ws/src/deps"
+      - "${HOST_W2_USDA_DIR:-/home/zy/FaSim-Isaac/robots/humanoid/FiveAges/Gen2/W2}:/opt/w2_usda:ro"
     environment:
       - DISPLAY
       - TMPDIR=/tmp/shared
